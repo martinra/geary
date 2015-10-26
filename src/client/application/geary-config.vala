@@ -94,11 +94,12 @@ public class Configuration {
     }
 
     public unowned Gee.ArrayList<string> _get_spell_check_languages() {
-        if ( _spell_check_languages == null )
+        if ( _spell_check_languages == null ) {
            _spell_check_languages = new Gee.ArrayList<string>();
            foreach(string language_code in settings.get_strv(SPELL_CHECK_LANGUAGES_KEY))
                _spell_check_languages.add(language_code);
-           // todo: find out available spell checkers and merge
+        }
+        // todo: find out available spell checkers and merge
         return _spell_check_languages;
     }
 
