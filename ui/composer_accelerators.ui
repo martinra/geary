@@ -15,6 +15,7 @@
     
     <accelerator action="removeformat" />
     <accelerator action="compose as html" name="htmlcompose" />
+    <accelerator action="spell check language" name="spellchecklanguage" />
     <accelerator action="show extended" name="extended" />
     
     <accelerator action="indent" />

@@ -140,6 +140,12 @@
       </object>
     </child>
     <child>
+      <object class="GtkAction" id="spell check language">
+        <property name="label" translatable="yes">Lang_uage</property>
+	<!--todo: insert <property name="icon_name"></property>-->
+      </object>
+    </child>
+    <child>
       <object class="GtkToggleAction" id="show extended">
         <property name="label" translatable="yes">Show Extended Fields</property>
         <property name="icon_name">show-more</property>

@@ -73,6 +73,16 @@
         <summary>enable inline spell checking</summary>
         <description>True to spell check while typing.</description>
     </key>
+    <key name="last-spell-check-language" type="s">
+        <default>""</default>
+        <summary>Language that was last used to check spelling</summary>
+        <description>A single language code or the empty string</description>
+    </key>
+    <key name="spell-check-languages" type="as">
+        <default>[]</default>
+        <summary>Language that are displayed to be used to check spelling</summary>
+        <description>A list of strings, each one a single language code</description>
+    </key>
     <key name="play-sounds" type="b">
         <default>true</default>
         <summary>enable notification sounds</summary>

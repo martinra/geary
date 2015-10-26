@@ -22,11 +22,15 @@ public class WebViewEditFixer {
     
     private WebKit.WebView web_view;
     private bool is_shift_down = false;
-    
+
+    // This is a kind of biase towards en_US that should be overwritten by the composer.
+    private string _spell_check_languages = "en_US";
+
     public WebViewEditFixer(WebKit.WebView web_view) {
         this.web_view = web_view;
         this.web_view.should_insert_text.connect(on_should_insert_text);
         this.web_view.key_press_event.connect(on_key_press_event);
+        this.web_view.settings.set_property("spell-checking-languages", _spell_check_languages);
     }
     
     ~WebViewEditFixer() {
@@ -313,5 +317,14 @@ public class WebViewEditFixer {
         }
         
         return false;
+    }
+
+    public string spell_check_languages {
+        get { return _spell_check_languages; }
+        set {
+            _spell_check_languages = value;
+            web_view.settings.set_property("spell-checking-languages", value);
+            // todo: touch all text so that spell-checking highligst correctly
+        }
     }
 }

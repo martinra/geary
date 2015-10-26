@@ -18,12 +18,17 @@ public class Configuration {
     public const string AUTOSELECT_KEY = "autoselect";
     public const string DISPLAY_PREVIEW_KEY = "display-preview";
     public const string SPELL_CHECK_KEY = "spell-check";
+    public const string LAST_SPELL_CHECK_LANGUAGE_KEY = "last-spell-check-language";
+    public const string SPELL_CHECK_LANGUAGES_KEY = "spell-check-languages";
     public const string PLAY_SOUNDS_KEY = "play-sounds";
     public const string SHOW_NOTIFICATIONS_KEY = "show-notifications";
     public const string STARTUP_NOTIFICATIONS_KEY = "startup-notifications";
     public const string ASK_OPEN_ATTACHMENT_KEY = "ask-open-attachment";
     public const string COMPOSE_AS_HTML_KEY = "compose-as-html";
     
+    private string _last_spell_check_language = null;
+    private Gee.ArrayList<string>? _spell_check_languages = null;
+
     public Settings settings { get; private set; }
     
     public Settings gnome_interface;
@@ -77,6 +82,28 @@ public class Configuration {
     
     public bool spell_check {
         get { return settings.get_boolean(SPELL_CHECK_KEY); }
+    }
+
+    private unowned string _get_last_spell_check_language() {
+        _last_spell_check_language = settings.get_string(LAST_SPELL_CHECK_LANGUAGE_KEY);
+        return _last_spell_check_language;
+    }
+
+    public string last_spell_check_language {
+        get { return _get_last_spell_check_language(); }
+    }
+
+    public unowned Gee.ArrayList<string> _get_spell_check_languages() {
+        if ( _spell_check_languages == null )
+           _spell_check_languages = new Gee.ArrayList<string>();
+           foreach(string language_code in settings.get_strv(SPELL_CHECK_LANGUAGES_KEY))
+               _spell_check_languages.add(language_code);
+           // todo: find out available spell checkers and merge
+        return _spell_check_languages;
+    }
+
+    public Gee.ArrayList<string> spell_check_languages {
+        get { return _get_spell_check_languages(); }
     }
 
     public bool play_sounds {

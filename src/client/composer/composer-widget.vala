@@ -132,6 +132,10 @@ public class ComposerWidget : Gtk.EventBox {
     private const int DRAFT_TIMEOUT_SEC = 10;
     
     public const string ATTACHMENT_KEYWORDS_SUFFIX = ".doc|.pdf|.xls|.ppt|.rtf|.pps";
+
+
+    // maximal number of spell checking language that will be displayed inline
+    private const int SPELL_CHECK_LANGUAGES_SUBMENU_BOUND = 2;
     
     // A list of keywords, separated by pipe ("|") characters, that suggest an attachment; since
     // this is full-word checking, include all variants of each word.  No spaces are allowed.
@@ -249,6 +253,9 @@ public class ComposerWidget : Gtk.EventBox {
     private Gtk.MenuItem color_item;
     private Gtk.MenuItem html_item;
     private Gtk.MenuItem html_item2;
+    private Gtk.MenuItem? spell_check_language_item = null;
+    private Gtk.Menu? spell_check_language_menu = null;
+    private GLib.List<Gtk.RadioMenuItem> spell_check_language_menu_items = new GLib.List<Gtk.RadioMenuItem>();
     private Gtk.MenuItem extended_item;
     
     private Gtk.ActionGroup actions;
@@ -541,10 +548,18 @@ public class ComposerWidget : Gtk.EventBox {
         
         editor.navigation_policy_decision_requested.connect(on_navigation_policy_decision_requested);
         editor.new_window_policy_decision_requested.connect(on_navigation_policy_decision_requested);
-        
+
         GearyApplication.instance.config.settings.changed[Configuration.SPELL_CHECK_KEY].connect(
             on_spell_check_changed);
         
+        unowned Gee.ArrayList<string> spell_check_languages = GearyApplication.instance.config.spell_check_languages;
+        // todo: find out about the current language and use this one
+        string last_spell_check_language = GearyApplication.instance.config.last_spell_check_language;
+        // todo: what to do, if last one is not contained in list of available ones?
+        if (last_spell_check_language == "" && spell_check_languages.size != 0)
+            last_spell_check_language = spell_check_languages[0];
+        edit_fixer.spell_check_languages = last_spell_check_language;
+
         // Font family menu items.
         font_sans = new Gtk.RadioMenuItem(new SList<Gtk.RadioMenuItem>());
         font_sans.activate.connect(on_font_sans);
@@ -573,6 +588,37 @@ public class ComposerWidget : Gtk.EventBox {
         html_item.related_action = ui.get_action("ui/htmlcompose");
         extended_item = new Gtk.CheckMenuItem();
         extended_item.related_action = ui.get_action("ui/extended");
+
+        if (spell_check_languages.size != 0 && spell_check_languages.size > SPELL_CHECK_LANGUAGES_SUBMENU_BOUND) {
+            spell_check_language_item = new Gtk.MenuItem();
+            spell_check_language_item.related_action = ui.get_action("ui/spellchecklanguage");
+            spell_check_language_menu = new Gtk.Menu();
+            spell_check_language_item.set_submenu(spell_check_language_menu);
+        }
+        foreach (string language_code in spell_check_languages) {
+            unowned Gtk.RadioMenuItem last_subitem;
+            Gtk.RadioMenuItem subitem;
+
+            if (spell_check_language_menu_items.length() != 0) {
+                last_subitem = spell_check_language_menu_items.last().data;
+                subitem = new Gtk.RadioMenuItem.from_widget(last_subitem);
+            } else {
+                subitem = new Gtk.RadioMenuItem(null);
+                last_subitem = subitem;
+            }
+            // todo: don't hardcode here
+            if (spell_check_language_menu != null)
+                spell_check_language_menu.append(subitem);
+
+            subitem.set_label(language_code);
+            subitem.set_draw_as_radio(true);
+            subitem.activate.connect(on_spell_check_language_changed);
+
+            if (language_code == last_spell_check_language)
+                subitem.set_active(true);
+
+            spell_check_language_menu_items.append((owned)subitem);
+        }
         
         html_item2 = new Gtk.CheckMenuItem();
         html_item2.related_action = ui.get_action("ui/htmlcompose");
@@ -1800,6 +1846,20 @@ public class ComposerWidget : Gtk.EventBox {
         GearyApplication.instance.config.compose_as_html = compose_as_html;
     }
 
+    private void on_spell_check_language_changed() {
+        string language_code = "";
+        foreach(unowned Gtk.RadioMenuItem item in spell_check_language_menu_items) {
+            if (item.get_active()) {
+                language_code = item.get_label();
+                break;
+            }
+        }
+        // todo: write this to the configuration file
+//        GearyApplication.instance.config.last_spell_check_language(item.get_label());
+
+        edit_fixer.spell_check_languages = language_code;
+    }
+
     private void on_show_extended() {
         if (!show_extended) {
             bcc_label.visible = bcc_entry.visible = reply_to_label.visible = reply_to_entry.visible = false;
@@ -1818,14 +1878,24 @@ public class ComposerWidget : Gtk.EventBox {
             actions.get_action(ACTION_INSERT_LINK).visible =
             actions.get_action(ACTION_REMOVE_FORMAT).visible = show;
     }
-    
+
     private void build_plaintext_menu() {
         GtkUtil.clear_menu(menu);
         
         menu.append(html_item2);
-
         menu.append(new Gtk.SeparatorMenuItem());
+
+        if (spell_check_language_menu_items.length() >= 1) {
+            if (spell_check_language_item != null)
+                menu.append(spell_check_language_item);
+            else
+                foreach(unowned Gtk.RadioMenuItem item in spell_check_language_menu_items)
+                    menu.append(item);
+            menu.append(new Gtk.SeparatorMenuItem());
+        }
+
         menu.append(extended_item);
+
         menu.show_all();
     }
     
@@ -1846,8 +1916,17 @@ public class ComposerWidget : Gtk.EventBox {
         menu.append(new Gtk.SeparatorMenuItem());
         
         menu.append(html_item);
-
         menu.append(new Gtk.SeparatorMenuItem());
+
+        if (spell_check_language_menu_items.length() >= 1) {
+            if (spell_check_language_item != null)
+                menu.append(spell_check_language_item);
+            else
+                foreach(unowned Gtk.RadioMenuItem item in spell_check_language_menu_items)
+                    menu.append(item);
+            menu.append(new Gtk.SeparatorMenuItem());
+        }
+
         menu.append(extended_item);
         menu.show_all(); // Call this or only menu items associated with actions will be displayed.
     }
